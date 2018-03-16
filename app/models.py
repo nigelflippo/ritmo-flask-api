@@ -9,39 +9,33 @@ class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     first_name = db.Column(db.String(128), nullable=False)
     last_name = db.Column(db.String(128), nullable=False)
-    username = db.Column(db.String(128), nullable=False)
     email = db.Column(db.String(128), unique=True, nullable=False)
-    phone_number = db.Column(db.String(128), nullable=False)
-    zip_code = db.Column(db.String(128), nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    skill_level = db.Column(db.String(128), nullable=False)
+    skill_level = db.Column(db.String(128), nullable=True)
     instrument = db.Column(db.String(128), nullable=False)
+    instructor = db.Column(db.Boolean, nullable=False, default=False)
 
-    def __init__(self, first_name, last_name, username, email, phone_number, zip_code, password, skill_level, instrument):
+    def __init__(self, first_name, last_name, email, password, skill_level, instrument, instructor):
         self.first_name = first_name
         self.last_name = last_name
-        self.username = username
         self.email = email
-        self.phone_number = phone_number
-        self.zip_code = zip_code
         self.password = bcrypt.generate_password_hash(
             password, app.config.get('BCRYPT_LOG_ROUNDS')
         ).decode()
         self.skill_level = skill_level
         self.instrument = instrument
+        self.instructor = instructor
 
     def serialize(self):
         return {
             'id': self.id,
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'username': self.username,
             'email': self.email,
-            'phone_number': self.phone_number,
-            'zip_code': self.zip_code,
             'password': self.password,
             'skill_level': self.skill_level,
-            'instrument': self.instrument
+            'instrument': self.instrument,
+            'instructor': self.instructor
         }
 
     def encode_auth_token(self, user_id):
@@ -73,3 +67,26 @@ class Users(db.Model):
             return 'Signature expired. Please log in again.'
         except jwt.InvalidTokenError:
             return 'Invalid token. Please log in again.'
+
+class BlacklistToken(db.Model):
+    __tablename__ = 'blacklist_tokens'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    token = db.Column(db.String(500), unique=True, nullable=False)
+    blacklisted_on = db.Column(db.DateTime, nullable=False)
+
+    def __init__(self, token):
+        self.token = token
+        self.blacklisted_on = datetime.datetime.now()
+
+    def __repr__(self):
+        return '<id: token: {}'.format(self.token)
+
+    @staticmethod
+    def check_blacklist(auth_token):
+        res = BlacklistToken.query.filter_by(token=str(auth_token)).first()
+        if res:
+            return True
+        else:
+            return False
+
