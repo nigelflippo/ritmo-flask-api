@@ -36,7 +36,8 @@ def register():
 		password = post_data.get('password'),
 		skill_level = post_data.get('skill_level'),
 		instrument = post_data.get('instrument'),
-		instructor = post_data.get('instructor')
+		instructor = post_data.get('instructor'),
+		bio = post_data.get('bio')
 	)
 	db.session.add(user)
 	db.session.commit()
@@ -95,6 +96,8 @@ def get_auth():
 					'first_name': user.first_name,
 					'last_name': user.last_name,
 					'email': user.email,
+					'instrument': user.instrument,
+					'bio': user.bio,
 					'instructor': user.instructor
 				}
 			}
