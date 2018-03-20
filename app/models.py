@@ -2,6 +2,35 @@ import datetime
 from app import app, db, bcrypt
 import jwt
 
+class Lessons(db.Model):
+	__tablename__ = "lessons"
+
+	id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+	lesson_name = db.Column(db.String(128), nullable=False)
+	instructor_id = db.Column(db.Integer, nullable=False)
+	student_id = db.Column(db.Integer, nullable=True)
+	instrument = db.Column(db.String(128), nullable=False)
+	date = db.Column(db.String(128), nullable=False)
+	skill_level = db.Column(db.String(128), nullable=False)
+
+	def __init__(self, lesson_name, instructor_id, student_id, instrument, date, skill_level):
+		self.lesson_name = lesson_name
+		self.instructor_id = instructor_id
+		self.student_id = student_id
+		self.instrument = instrument
+		self.date = date 
+		self.skill_level = skill_level
+
+	def serialize(self):
+		return {
+			'id': self.id,
+			'lesson_name': self.lesson_name,
+			'instructor_id': self.instructor_id,
+			'student_id': self.student_id,
+			'instrument': self.instrument,
+			'date': self.date,
+			'skill_level': self.skill_level
+		}
 
 class Users(db.Model):
     __tablename__ = "users"

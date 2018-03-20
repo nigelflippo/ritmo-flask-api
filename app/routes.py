@@ -1,15 +1,79 @@
 from flask import request, make_response, jsonify, abort, render_template
 from app import app, db, bcrypt
-from app.models import Users, BlacklistToken
+from app.models import Users, Lessons, BlacklistToken
 
 @app.route('/')
 def index():
     return "Ritmo API"
 
+@app.route('/lessons/new', methods=['POST'])
+def post_lesson():
+	post_data = request.get_json()
+	date = post_data.get('date')
+
+	if Lessons.query.filter_by(date=date).first() is not None:
+		responseObject = {
+		'status': 'error',
+		'message': 'Lesson already exists.'
+		}
+		return jsonify(responseObject), 400
+	lesson = Lessons(
+		lesson_name = post_data.get('lesson_name'),
+		instructor_id = post_data.get('instructor_id'),
+		student_id = post_data.get('student_id'),
+		instrument = post_data.get('instrument'),
+		date = post_data.get('date'),
+		skill_level = post_data.get('skill_level')
+	)
+	db.session.add(lesson)
+	db.session.commit()
+
+	responseObject = {
+		'status': 'success',
+		'message': 'Lesson posted.',
+		'lesson_name': lesson.lesson_name,
+		'skill_level': lesson.skill_level
+	}
+	return jsonify(responseObject), 201
+
+@app.route('/lessons/<int:id>', methods=['PUT'])
+def update_lesson(id):
+	patch_data = request.get_json()
+
+	lesson = Lessons.query.get(id)
+	student_id = patch_data.get('student_id')
+
+	lesson.student_id = student_id
+
+	db.session.commit()
+	return jsonify(Lessons.serialize(lesson))
+
+@app.route('/lessons/all', methods=['GET'])
+def get_lessons():
+	lessons = Lessons.query.order_by(Lessons.id).all()
+	return jsonify({'data': [Lessons.serialize(lesson) for lesson in lessons]})
+
+@app.route('/lessons/<int:id>', methods=['DELETE'])
+def delete_lesson(id):
+	lesson = Lessons.query.get(id)
+	if not lesson:
+		abort(400)
+
+	db.session.delete(lesson)
+	db.session.commit()
+	return jsonify(Lessons.serialize(lesson))
+
 @app.route('/users/all', methods=['GET'])
 def get_users():
 	users = Users.query.order_by(Users.id).all()
 	return jsonify({'data': [Users.serialize(user) for user in users]})
+
+@app.route('/users/<int:id>', methods=['GET'])
+def get_user(id):
+	user = Users.query.get(id)
+	if not user:
+		abort(400)
+	return jsonify(Users.serialize(user))
 
 @app.route('/users/register', methods=['POST'])
 def register():
@@ -47,7 +111,8 @@ def register():
 		'status': 'success',
 		'message': 'Successfully registered',
 		'auth_token': auth_token.decode(),
-		'instructor': user.instructor
+		'instructor': user.instructor,
+		'id': user.id
 	}
 	return jsonify(responseObject), 201
 
@@ -64,7 +129,8 @@ def user_login():
 				'status': 'success',
 				'message': 'Successfully logged in.',
 				'auth_token': auth_token.decode(),
-				'instructor': user.instructor
+				'instructor': user.instructor,
+				'id': user.id
 			}
 			return jsonify(responseObject), 200
 	else:
