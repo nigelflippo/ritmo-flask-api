@@ -48,6 +48,7 @@ def update_lesson(id):
 	db.session.commit()
 	return jsonify(Lessons.serialize(lesson))
 
+
 @app.route('/lessons/all', methods=['GET'])
 def get_lessons():
 	lessons = Lessons.query.order_by(Lessons.id).all()
@@ -62,6 +63,18 @@ def delete_lesson(id):
 	db.session.delete(lesson)
 	db.session.commit()
 	return jsonify(Lessons.serialize(lesson))
+
+@app.route('/users/<int:id>', methods=['PUT'])
+def patch_user(id):
+	patch_data = request.get_json()
+
+	user = Users.query.get(id)
+	avatar = patch_data.get('avatar')
+
+	user.avatar = avatar
+
+	db.session.commit()
+	return jsonify(Users.serialize(user))
 
 @app.route('/users/all', methods=['GET'])
 def get_users():
@@ -101,7 +114,9 @@ def register():
 		skill_level = post_data.get('skill_level'),
 		instrument = post_data.get('instrument'),
 		instructor = post_data.get('instructor'),
-		bio = post_data.get('bio')
+		bio = post_data.get('bio'),
+		avatar = post_data.get('avatar'),
+		phone_number = post_data.get('phone_number')
 	)
 	db.session.add(user)
 	db.session.commit()
@@ -130,6 +145,8 @@ def user_login():
 				'message': 'Successfully logged in.',
 				'auth_token': auth_token.decode(),
 				'instructor': user.instructor,
+				'avatar': user.avatar,
+				'phone_number': user.phone_number,
 				'id': user.id
 			}
 			return jsonify(responseObject), 200
@@ -164,7 +181,9 @@ def get_auth():
 					'email': user.email,
 					'instrument': user.instrument,
 					'bio': user.bio,
-					'instructor': user.instructor
+					'instructor': user.instructor,
+					'avatar': user.avatar,
+					'phone_number': user.phone_number
 				}
 			}
 			return jsonify(responseObject), 200

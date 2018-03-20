@@ -44,8 +44,11 @@ class Users(db.Model):
     instrument = db.Column(db.String(128), nullable=False)
     instructor = db.Column(db.Boolean, nullable=False, default=False)
     bio = db.Column(db.Text, nullable=False, default="New User Profile")
+    avatar = db.Column(db.String(512), nullable=True)
+    phone_number = db.Column(db.String(128), nullable=False)
 
-    def __init__(self, first_name, last_name, email, password, skill_level, instrument, instructor, bio):
+
+    def __init__(self, first_name, last_name, email, password, skill_level, instrument, instructor, bio, avatar, phone_number):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
@@ -56,6 +59,8 @@ class Users(db.Model):
         self.instrument = instrument
         self.instructor = instructor
         self.bio = bio
+        self.avatar = avatar
+        self.phone_number = phone_number
 
     def serialize(self):
         return {
@@ -67,7 +72,10 @@ class Users(db.Model):
             'skill_level': self.skill_level,
             'instrument': self.instrument,
             'instructor': self.instructor,
-            'bio': self.bio
+            'bio': self.bio,
+            'avatar': self.avatar,
+            'phone_number': self.phone_number
+
         }
 
     def encode_auth_token(self, user_id):
