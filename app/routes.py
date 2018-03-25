@@ -64,6 +64,16 @@ def delete_lesson(id):
 	db.session.commit()
 	return jsonify(Lessons.serialize(lesson))
 
+@app.route('/users/<int:id>', methods=['DELETE'])
+def delete_user(id):
+	user = Users.query.get(id)
+	if not user:
+		abort(400)
+
+	db.session.delete(user)
+	db.session.commit()
+	return jsonify(Users.serialize(user))
+
 @app.route('/users/<int:id>', methods=['PUT'])
 def patch_user(id):
 	patch_data = request.get_json()
